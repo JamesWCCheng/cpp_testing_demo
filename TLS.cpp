@@ -9,7 +9,7 @@ using namespace std;
 //Key Idea:
 //用一個global 的key 去跟linux 要value, 而key會因為不同的thread而mapping到不一樣的value.
 //這class能夠吃 sizeof < pointer的物件, 若 > pointer size , 請存pointer
-
+//底下是驗證 不同thread 存取同一個key , 卻可以拿到不同的value
 typedef void* (*ThreadProc)(void*);
 ThreadLocal<long long> gTLS;
 void thread(void*)
@@ -33,7 +33,7 @@ int main()
    // cout<<sizeof(uintptr_t);
   gTLS.set(d);
   pthread_t id;
-  int i,ret;
+  int ret;
   ret=pthread_create(&id,NULL,(ThreadProc)thread,NULL);
   if(ret!=0){
     printf ("Create pthread error!\n");
