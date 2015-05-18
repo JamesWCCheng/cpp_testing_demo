@@ -44,7 +44,11 @@ typedef IntegralConstant<bool, false> FalseType;
 struct IsDestructibleFallbackImpl
 {
   template<typename T> static T&& Declval();
+  /*template<typename T, typename = decltype(Declval<T>().~T())>
+  static TrueType Test(...);
 
+  template<typename>
+  static FalseType Test(int);  若這樣寫  他0直接走false就不推倒了*/
   template<typename T, typename = decltype(Declval<T>().~T())>
   static TrueType Test(int);
 
