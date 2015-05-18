@@ -54,7 +54,7 @@ struct IsDestructibleFallbackImpl
   template<typename T>
   struct Selector
   {
-    typedef decltype(Test<T>(0)) type;
+    typedef decltype(Test<T>(0)) type; //推導 先看看是否滿足 int版本的實作
   };
 };
 
