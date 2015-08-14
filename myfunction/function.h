@@ -49,8 +49,7 @@ private:
     }
     Return invoke(Args... args) override
     {
-      std::cout<<"invoke"<<std::endl;
-      mMethod(std::forward<Args>(args)...);
+      return mMethod(std::forward<Args>(args)...);
     }
     Method mMethod;
   };
@@ -66,7 +65,7 @@ private:
     {}
     Return invoke(Args... args) override
     {
-      (mThis->*mMemberFunction)(std::forward<Args>(args)...);
+      return (mThis->*mMemberFunction)(std::forward<Args>(args)...);
     }
   };
 };
