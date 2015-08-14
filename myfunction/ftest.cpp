@@ -2,27 +2,25 @@
 #include <iostream>
 using namespace std;
 
-void XD(){std::cout<<"XD"<<std::endl;}
+void Bar(){std::cout<<"Bar"<<std::endl;}
 struct Foo
 {
-  Foo() {
-  }
-
-  Foo(const Foo &ref) {
-  std::cout << "copy " << &ref << std::endl;
-  }
-
-  Foo(Foo &&ref) {
-  std::cout << "move " << &ref << std::endl;
-  }
-
   void operator()()
   {std::cout<<"void functor"<<std::endl;}
 
   void MemberFunction(){std::cout<<"member function"<<std::endl;}
 };
 
-typedef void(*FPTR)();
+class XDD
+{
+public: XDD(const XDD& rhs){cout<<"XDD"<<endl;} XDD(){}
+  XDD(XDD&& rhs){cout<<"move"<<endl;}
+};
+void XD(XDD xdd)
+{
+  std::cout<<"XD"<<std::endl;
+}
+typedef void(*FPTR)(XDD);
 int main()
 {
   Foo foo;
@@ -39,13 +37,17 @@ int main()
   //Functor
   Function<void(void)> v = Foo();
   v();
-  //function pointer
-  FPTR fptr = &XD;
-  Function<void(void)> fp = fptr;
 
   //member function
   Function<void(void)> mfp(&foo,&Foo::MemberFunction);
   mfp();
 
+  //function pointer
+  XDD xdd;
+  FPTR fptr = &XD;
+  cout<<"===+"<<endl;
+  Function<void(XDD)> fp = fptr;
+  cout<<"===-"<<endl;
+  fp(xdd);
   return 0;
 }

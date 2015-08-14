@@ -3,7 +3,6 @@
 #include <iostream>
 #include <memory>
 
-using namespace std;
 template<class T>
 class Function;
 
@@ -11,8 +10,7 @@ template<class Return, class...Args>
 class Function<Return(Args...)>
 {
   class MethodWrapper;
-  //
-  shared_ptr<MethodWrapper> mMethodWarpper;
+  std::shared_ptr<MethodWrapper> mMethodWarpper;
 public:
   //Except Pointer to member.
   template<typename Method>
@@ -21,6 +19,7 @@ public:
     {
 
     }
+  //For Pointer to Member
   template<typename This>
   Function(This* _this, Return (This::*memberFunction)(Args...))
     :mMethodWarpper(std::make_shared<MemberMethodImpl<This>>(_this, std::move(memberFunction)))
@@ -50,6 +49,7 @@ private:
     }
     Return invoke(Args... args) override
     {
+      std::cout<<"invoke"<<std::endl;
       mMethod(std::forward<Args>(args)...);
     }
     Method mMethod;
