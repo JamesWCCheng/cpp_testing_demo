@@ -2,6 +2,7 @@
 #include <tuple>
 #include <Windows.h>
 #include <mutex>
+#include <future>
 using namespace std;
 
 template<class Type, Type...>
@@ -18,13 +19,22 @@ struct Append<Type, Sequence<Type, BEGIN...>, END> {
 
 template<int BEGIN, int END, bool = (END >= BEGIN)> struct MakeIntegerSequenceImpl;
 
+// 0個參數的case
 template<int BEGIN, int END>
 struct MakeIntegerSequenceImpl<BEGIN, END, false> {
   typedef Sequence<int> result;
 };
 
+// 1個以上參數的case
 template<int BEGIN, int END>
 struct MakeIntegerSequenceImpl<BEGIN, END, true> {
+    // BEGIN = 0, END = 2
+    // = Append<int, MakeIntegerSequenceImpl<0,1>::result, 2>
+    // = Append<int, Append<int, MakeIntegerSequenceImpl<0, 0>::result, 1>::result, 2>
+    // = Append<int, Append<Sequence<0>, 1>::result, 2>
+    // = Append<int, Sequence<0, 1>, 2>
+    // = Sequence<int, 0, 1, 2>
+
   typedef typename Append<int, typename MakeIntegerSequenceImpl<BEGIN, END - 1>::result, END>::result result;
 };
 
@@ -45,12 +55,19 @@ public:
   ThreadData(Func func, std::tuple<Args...> data)
     : mUserFunc(std::move(func)), mThreadData(std::move(data))
   {
-    
+
   }
 
   template<int... N>
   DWORD RunInternal(Sequence<int, N...>&&)
   {
+    // 假設是 Sequence<int>, 根本沒有N 效果就是
+    // mUserFunc();
+     
+    // 假設是 Sequence<int, 0, 1, 2>
+    // mUserFunc(std::get<0>(mThreadData), 
+    //           std::get<1>(mThreadData),
+    //           std::get<2>(mThreadData));
     mUserFunc(std::get<N>(mThreadData)...);
     return 0;
   }
@@ -58,14 +75,13 @@ public:
   {
     // 
     ThreadData* threadData = static_cast<ThreadData*>(obj);
-    // threadData->mUserFunc(std::get<0>(threadData->mThreadData));
-    //threadData->mUserFunc(std::get<0.....N-1>(threadData->mThreadData)...);
-    //auto result = threadData->RunInternal(Sequence<0>());
+
+    //auto result = threadData->RunInternal(Sequence<int, 0~N-1>());
     auto result = threadData->RunInternal(typename MakeIntegerSequence<0, sizeof...(Args)-1>::result());
     delete threadData;
     return result;
   }
-  
+
 
 private:
   Func mUserFunc;
@@ -77,8 +93,9 @@ public:
   template<class Func, class... Args>
   Thread(Func&& func, Args&&... args)
   {
-    ThreadData<Func, Args...> *data = new ThreadData<Func, Args...>(std::forward<Func>(func), std::make_tuple(std::forward<Args>(args)...));
-    
+    ThreadData<Func, Args...> *data = new ThreadData<Func, Args...>(std::forward<Func>(func), 
+                                                                    std::make_tuple(std::forward<Args>(args)...));
+
     mThreadHandle = CreateThread(
       NULL, 0,
       ThreadData<Func, Args...>::Run, data,
@@ -108,7 +125,7 @@ void ThreadProc(int num)
 void ThreadProc2(int num, double num2)
 {
   std::lock_guard<std::mutex> lock(gMutex);
-  cout << num << "," << num2 <<endl;
+  cout << num << "," << num2 << endl;
 }
 void ThreadProc3()
 {
